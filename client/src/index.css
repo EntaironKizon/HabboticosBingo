@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 270 91% 65%; /* habbo-purple */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 60 4.8% 95.9%;
+  --secondary-foreground: 24 9.8% 10%;
+  --accent: 60 4.8% 95.9%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+  
+  /* Custom Habbo colors */
+  --habbo-purple: 270 91% 65%;
+  --habbo-purple-dark: 262 83% 58%;
+  --habbo-purple-light: 277 85% 68%;
+  --habbo-pink: 330 81% 60%;
+  --habbo-yellow: 45 93% 47%;
+  --habbo-green: 159 61% 41%;
+  --habbo-red: 0 84% 60%;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 270 91% 65%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 min-h-screen font-sans antialiased text-foreground;
+  }
+}
+
+@layer utilities {
+  .font-pixel {
+    font-family: 'Press Start 2P', cursive;
+  }
+  
+  .font-main {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .habbo-purple {
+    color: hsl(var(--habbo-purple));
+  }
+  
+  .bg-habbo-purple {
+    background-color: hsl(var(--habbo-purple));
+  }
+  
+  .border-habbo-purple {
+    border-color: hsl(var(--habbo-purple));
+  }
+  
+  .habbo-pink {
+    color: hsl(var(--habbo-pink));
+  }
+  
+  .bg-habbo-pink {
+    background-color: hsl(var(--habbo-pink));
+  }
+  
+  .border-habbo-pink {
+    border-color: hsl(var(--habbo-pink));
+  }
+  
+  .habbo-green {
+    color: hsl(var(--habbo-green));
+  }
+  
+  .bg-habbo-green {
+    background-color: hsl(var(--habbo-green));
+  }
+  
+  .habbo-yellow {
+    color: hsl(var(--habbo-yellow));
+  }
+  
+  .bg-habbo-yellow {
+    background-color: hsl(var(--habbo-yellow));
+  }
+  
+  .habbo-red {
+    color: hsl(var(--habbo-red));
+  }
+  
+  .bg-habbo-red {
+    background-color: hsl(var(--habbo-red));
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  .bingo-number {
+    aspect-ratio: 1;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  
+  .bingo-number:hover {
+    transform: scale(1.1);
+  }
+  
+  .bingo-number.marked {
+    background: linear-gradient(45deg, hsl(var(--habbo-purple)), hsl(var(--habbo-pink))) !important;
+    color: white !important;
+    font-weight: bold;
+  }
+  
+  .bingo-number.called {
+    animation: glow 1s ease-in-out;
+  }
+}
+
+@keyframes glow {
+  from { 
+    box-shadow: 0 0 5px hsl(var(--habbo-purple)); 
+  }
+  to { 
+    box-shadow: 0 0 20px hsl(var(--habbo-purple)), 0 0 30px hsl(var(--habbo-purple)); 
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}

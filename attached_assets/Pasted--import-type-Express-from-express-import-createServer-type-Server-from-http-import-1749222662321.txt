@@ -1,0 +1,664 @@
+
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
+import { storage } from "./storage";
+
+// Almacena intervalos activos por roomId
+const gameIntervals = new Map<number, NodeJS.Timeout>();
+
+function generateRoomCode(): string {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+function generateBingoCard(): (number | string)[] {
+  const card: (number | string)[] = [];
+  const ranges: Record<string, [number, number]> = {
+    B: [1, 15],
+    I: [16, 30],
+    N: [31, 45],
+    G: [46, 60],
+    O: [61, 75]
+  };
+
+  Object.keys(ranges).forEach((letter, colIndex) => {
+    const [min, max] = ranges[letter];
+    const columnNumbers: number[] = [];
+
+    while (columnNumbers.length < 5) {
+      const num = Math.floor(Math.random() * (max - min + 1)) + min;
+      if (!columnNumbers.includes(num)) {
+        columnNumbers.push(num);
+      }
+    }
+
+    columnNumbers.forEach((num, rowIndex) => {
+      const index = colIndex * 5 + rowIndex;
+      if (colIndex === 2 && rowIndex === 2) {
+        card[index] = "FREE";
+      } else {
+        card[index] = columnNumbers[rowIndex];
+      }
+    });
+  });
+
+  return card;
+}
+
+function checkForWin(bingoCard: (number | string)[], markedNumbers: number[]): boolean {
+  const winPatterns = [
+    [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
+    [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],
+    [0,6,12,18,24],[4,8,12,16,20]
+  ];
+
+  return winPatterns.some((pattern) =>
+    pattern.every((index) => {
+      const number = bingoCard[index];
+      return number === "FREE" || markedNumbers.includes(number as number);
+    })
+  );
+}
+
+async function callNextNumber(roomId: number, wss: WebSocketServer) {
+  const room = await storage.getRoomById(roomId);
+  if (!room || !room.isGameActive) {
+    const interval = gameIntervals.get(roomId);
+    if (interval) clearInterval(interval);
+    return;
+  }
+
+  const calledNumbers = room.calledNumbers || [];
+  const availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1).filter(
+    (n) => !calledNumbers.includes(n)
+  );
+
+  if (availableNumbers.length === 0) {
+    const interval = gameIntervals.get(roomId);
+    if (interval) clearInterval(interval);
+    return;
+  }
+
+  const newNumber = availableNumbers[
+    Math.floor(Math.random() * availableNumbers.length)
+  ];
+  const updatedCalledNumbers = [...calledNumbers, newNumber];
+
+  await storage.updateRoom(roomId, {
+    currentNumber: newNumber,
+    calledNumbers: updatedCalledNumbers,
+  });
+
+  const players = await storage.getPlayersByRoomId(roomId);
+  players.forEach((p) => {
+    wss.clients.forEach((client) => {
+      if (
+        client.readyState === WebSocket.OPEN &&
+        (client as any).socketId === p.socketId
+      ) {
+        client.send(
+          JSON.stringify({
+            type: "number_called",
+            number: newNumber,
+            calledNumbers: updatedCalledNumbers,
+          })
+        );
+      }
+    });
+  });
+}
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  const httpServer = createServer(app);
+  const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+
+  // Generar IDs únicos para cada conexión WebSocket
+  let connectionId = 0;
+
+  wss.on("connection", (ws: WebSocket) => {
+    const socketId = `socket_${++connectionId}_${Date.now()}`;
+    (ws as any).socketId = socketId;
+
+    ws.on("message", async (data: Buffer) => {
+      try {
+        const message = JSON.parse(data.toString());
+
+        switch (message.type) {
+          case "create_room": {
+            const { username, roomCode } = message;
+            const code = roomCode || generateRoomCode();
+            
+            const existingRoom = await storage.getRoomByCode(code);
+            if (existingRoom) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "El código de sala ya existe" })
+              );
+              return;
+            }
+
+            const room = await storage.createRoom({
+              code,
+              hostId: username,
+              isGameActive: false,
+              currentNumber: null,
+              calledNumbers: [],
+            });
+
+            const bingoCard = generateBingoCard();
+            const player = await storage.createPlayer({
+              username,
+              roomId: room.id,
+              socketId: socketId,
+              bingoCard,
+              markedNumbers: [],
+              isHost: true,
+            });
+
+            const playersInRoom = await storage.getPlayersByRoomId(room.id);
+            playersInRoom.forEach((p) => {
+              wss.clients.forEach((client) => {
+                if (
+                  client.readyState === WebSocket.OPEN &&
+                  (client as any).socketId === p.socketId
+                ) {
+                  client.send(
+                    JSON.stringify({
+                      type: "room_created",
+                      room,
+                      player,
+                      isHost: true,
+                    })
+                  );
+                }
+              });
+            });
+
+            break;
+          }
+
+          case "join_room": {
+            const { username, roomCode } = message;
+            const room = await storage.getRoomByCode(roomCode);
+            if (!room) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Sala no encontrada" })
+              );
+              return;
+            }
+
+            const bingoCard = generateBingoCard();
+            const player = await storage.createPlayer({
+              username,
+              roomId: room.id,
+              socketId: socketId,
+              bingoCard,
+              markedNumbers: [],
+              isHost: false,
+            });
+
+            const players = await storage.getPlayersByRoomId(room.id);
+            const playersInRoom = await storage.getPlayersByRoomId(room.id);
+
+            playersInRoom.forEach((p) => {
+              wss.clients.forEach((client) => {
+                if (
+                  client.readyState === WebSocket.OPEN &&
+                  (client as any).socketId === p.socketId
+                ) {
+                  client.send(
+                    JSON.stringify({
+                      type: "player_joined",
+                      player,
+                      players,
+                      playerCount: players.length,
+                    })
+                  );
+                }
+              });
+            });
+
+            ws.send(
+              JSON.stringify({
+                type: "room_joined",
+                room,
+                player,
+                players,
+                isHost: false,
+              })
+            );
+
+            break;
+          }
+
+          case "start_game": {
+            const player = await storage.getPlayerBySocketId(socketId);
+            if (!player || !player.isHost) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Solo el host puede iniciar el juego" })
+              );
+              return;
+            }
+
+            const room = await storage.updateRoom(player.roomId!, {
+              isGameActive: true,
+              calledNumbers: [],
+              currentNumber: null,
+            });
+
+            const existingInterval = gameIntervals.get(player.roomId!);
+            if (existingInterval) clearInterval(existingInterval);
+
+            const interval = setInterval(() => {
+              callNextNumber(player.roomId!, wss);
+            }, 6000);
+            gameIntervals.set(player.roomId!, interval);
+
+            setTimeout(() => callNextNumber(player.roomId!, wss), 1000);
+
+            const players = await storage.getPlayersByRoomId(player.roomId!);
+            players.forEach((p) => {
+              wss.clients.forEach((client) => {
+                if (
+                  client.readyState === WebSocket.OPEN &&
+                  (client as any).socketId === p.socketId
+                ) {
+                  client.send(JSON.stringify({ type: "game_started", room }));
+                }
+              });
+            });
+
+            break;
+          }
+
+          case "call_number": {
+            const player = await storage.getPlayerBySocketId(socketId);
+            if (!player || !player.isHost) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Solo el host puede cantar números" })
+              );
+              return;
+            }
+
+            const room = await storage.getRoomById(player.roomId!);
+            if (!room || !room.isGameActive) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "El juego no está activo" })
+              );
+              return;
+            }
+
+            const calledNumbers = room.calledNumbers || [];
+            const availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1).filter(
+              (n) => !calledNumbers.includes(n)
+            );
+
+            if (availableNumbers.length === 0) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Todos los números han sido cantados" })
+              );
+              return;
+            }
+
+            const newNumber = availableNumbers[
+              Math.floor(Math.random() * availableNumbers.length)
+            ];
+            const updatedCalledNumbers = [...calledNumbers, newNumber];
+            await storage.updateRoom(room.id, {
+              currentNumber: newNumber,
+              calledNumbers: updatedCalledNumbers,
+            });
+
+            const players = await storage.getPlayersByRoomId(room.id);
+            players.forEach((p) => {
+              wss.clients.forEach((client) => {
+                if (
+                  client.readyState === WebSocket.OPEN &&
+                  (client as any).socketId === p.socketId
+                ) {
+                  client.send(
+                    JSON.stringify({
+                      type: "number_called",
+                      number: newNumber,
+                      calledNumbers: updatedCalledNumbers,
+                    })
+                  );
+                }
+              });
+            });
+
+            break;
+          }
+
+          case "mark_number": {
+            const { number } = message;
+            console.log(`Mark number request: ${number} from socket ${socketId}`);
+            
+            const player = await storage.getPlayerBySocketId(socketId);
+            if (!player) {
+              console.log(`Player not found for socket ${socketId}`);
+              return;
+            }
+            console.log(`Player found: ${player.username}, isHost: ${player.isHost}`);
+
+            const room = await storage.getRoomById(player.roomId!);
+            if (!room) {
+              console.log(`Room not found for id ${player.roomId}`);
+              return;
+            }
+
+            const calledNumbers = room.calledNumbers || [];
+            console.log(`Called numbers: ${JSON.stringify(calledNumbers)}, trying to mark: ${number}`);
+            
+            if (!calledNumbers.includes(number) && number !== "FREE") {
+              console.log(`Number ${number} not called yet, sending error`);
+              ws.send(
+                JSON.stringify({ type: "error", message: "Este número aún no ha sido cantado" })
+              );
+              return;
+            }
+
+            let markedNumbers = [...(player.markedNumbers || [])];
+            if (!markedNumbers.includes(number) && number !== "FREE") {
+              markedNumbers.push(number);
+              await storage.updatePlayer(player.id, { markedNumbers });
+
+              ws.send(
+                JSON.stringify({
+                  type: "number_marked",
+                  number,
+                  markedNumbers,
+                })
+              );
+
+              // Verificar si el jugador ha ganado
+              const hasWon = checkForWin(player.bingoCard, markedNumbers);
+              console.log(`Checking bingo for ${player.username}:`, {
+                bingoCard: player.bingoCard,
+                markedNumbers,
+                hasWon,
+                isHost: player.isHost
+              });
+              
+              if (hasWon) {
+                // Parar el juego inmediatamente
+                const existingInterval = gameIntervals.get(room.id);
+                if (existingInterval) {
+                  clearInterval(existingInterval);
+                  gameIntervals.delete(room.id);
+                }
+                await storage.updateRoom(room.id, { isGameActive: false });
+
+                const players = await storage.getPlayersByRoomId(room.id);
+                
+                if (player.isHost) {
+                  // Si el host gana, anuncia directamente a todos
+                  players.forEach((p) => {
+                    wss.clients.forEach((client) => {
+                      if (
+                        client.readyState === WebSocket.OPEN &&
+                        (client as any).socketId === p.socketId
+                      ) {
+                        client.send(
+                          JSON.stringify({ type: "player_won", winner: player.username })
+                        );
+                      }
+                    });
+                  });
+                } else {
+                  // Si un jugador no-host gana, notifica a TODOS que alguien cantó bingo
+                  players.forEach((p) => {
+                    wss.clients.forEach((client) => {
+                      if (
+                        client.readyState === WebSocket.OPEN &&
+                        (client as any).socketId === p.socketId
+                      ) {
+                        if (p.isHost) {
+                          // Al host le enviamos la notificación para confirmar
+                          client.send(
+                            JSON.stringify({ 
+                              type: "bingo_notification", 
+                              winner: player.username,
+                              winnerId: player.id
+                            })
+                          );
+                        } else {
+                          // A todos los demás les enviamos que alguien cantó bingo
+                          client.send(
+                            JSON.stringify({ 
+                              type: "bingo_announced", 
+                              winner: player.username,
+                              message: `${player.username} ha cantado ¡BINGO! Esperando confirmación del host...`
+                            })
+                          );
+                        }
+                      }
+                    });
+                  });
+                }
+              }
+            } else if (number === "FREE") {
+              // Para la casilla FREE, solo enviar confirmación sin agregar a markedNumbers
+              ws.send(
+                JSON.stringify({
+                  type: "number_marked",
+                  number,
+                  markedNumbers,
+                })
+              );
+            }
+
+            break;
+          }
+
+          case "confirm_bingo": {
+            const { winnerId } = message;
+            const host = await storage.getPlayerBySocketId(socketId);
+            if (!host || !host.isHost) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Solo el host puede confirmar el bingo" })
+              );
+              return;
+            }
+
+            const winner = await storage.getPlayerById(winnerId);
+            if (!winner) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Jugador ganador no encontrado" })
+              );
+              return;
+            }
+
+            const room = await storage.getRoomById(host.roomId!);
+            if (!room) return;
+
+            // Parar el juego
+            const existingInterval = gameIntervals.get(host.roomId!);
+            if (existingInterval) {
+              clearInterval(existingInterval);
+              gameIntervals.delete(host.roomId!);
+            }
+
+            await storage.updateRoom(room.id, { isGameActive: false });
+
+            // Anunciar el ganador a todos los jugadores
+            const players = await storage.getPlayersByRoomId(room.id);
+            players.forEach((p) => {
+              wss.clients.forEach((client) => {
+                if (
+                  client.readyState === WebSocket.OPEN &&
+                  (client as any).socketId === p.socketId
+                ) {
+                  client.send(
+                    JSON.stringify({ type: "player_won", winner: winner.username })
+                  );
+                }
+              });
+            });
+
+            break;
+          }
+
+          case "reset_game": {
+            const player = await storage.getPlayerBySocketId(socketId);
+            if (!player || !player.isHost) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Solo el host puede reiniciar el juego" })
+              );
+              return;
+            }
+
+            const existingInterval = gameIntervals.get(player.roomId!);
+            if (existingInterval) {
+              clearInterval(existingInterval);
+              gameIntervals.delete(player.roomId!);
+            }
+
+            await storage.updateRoom(player.roomId!, {
+              isGameActive: false,
+              calledNumbers: [],
+              currentNumber: null,
+            });
+
+            const players = await storage.getPlayersByRoomId(player.roomId!);
+            for (const p of players) {
+              const newBingoCard = generateBingoCard();
+              await storage.updatePlayer(p.id, {
+                markedNumbers: [],
+                bingoCard: newBingoCard,
+              });
+            }
+
+            const updatedPlayers = await storage.getPlayersByRoomId(player.roomId!);
+            updatedPlayers.forEach((p) => {
+              wss.clients.forEach((client) => {
+                if (
+                  client.readyState === WebSocket.OPEN &&
+                  (client as any).socketId === p.socketId
+                ) {
+                  const playerData = updatedPlayers.find(
+                    (up) => up.socketId === p.socketId
+                  );
+                  client.send(
+                    JSON.stringify({
+                      type: "game_reset",
+                      bingoCard: playerData?.bingoCard,
+                    })
+                  );
+                }
+              });
+            });
+
+            break;
+          }
+
+          case "send_message": {
+            const { message: chatMessage } = message;
+            const player = await storage.getPlayerBySocketId(socketId);
+            if (!player) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Jugador no encontrado" })
+              );
+              return;
+            }
+
+            const chatMsg = {
+              type: "chat_message",
+              username: player.username,
+              message: chatMessage,
+              timestamp: new Date().toISOString(),
+              isHost: player.isHost,
+            };
+
+            // Enviar mensaje a todos los jugadores en la sala (sin duplicar)
+            const players = await storage.getPlayersByRoomId(player.roomId!);
+            wss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                const clientSocketId = (client as any).socketId;
+                const isPlayerInRoom = players.some(p => p.socketId === clientSocketId);
+                if (isPlayerInRoom) {
+                  client.send(JSON.stringify(chatMsg));
+                }
+              }
+            });
+
+            break;
+          }
+        }
+      } catch (error) {
+        console.error("WebSocket message error:", error);
+        ws.send(JSON.stringify({ type: "error", message: "Error del servidor" }));
+      }
+    });
+
+    ws.on("close", async () => {
+      const player = await storage.getPlayerBySocketId(socketId);
+      if (!player) return;
+
+      const roomId = player.roomId!;
+      
+      if (player.isHost) {
+        // Si el host abandona, transferir host al siguiente jugador o cerrar sala
+        const allPlayers = await storage.getPlayersByRoomId(roomId);
+        const otherPlayers = allPlayers.filter(p => p.id !== player.id);
+        
+        if (otherPlayers.length > 0) {
+          // Transferir host al primer jugador disponible
+          const newHost = otherPlayers[0];
+          await storage.updatePlayer(newHost.id, { isHost: true });
+          await storage.updateRoom(roomId, { hostId: newHost.username });
+          
+          // Remover al host actual
+          await storage.removePlayerBySocketId(socketId);
+          
+          // Notificar a todos los jugadores sobre el cambio de host
+          const remainingPlayers = await storage.getPlayersByRoomId(roomId);
+          remainingPlayers.forEach((p) => {
+            wss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN && (client as any).socketId === p.socketId) {
+                client.send(
+                  JSON.stringify({
+                    type: "host_changed",
+                    newHost: newHost.username,
+                    isHost: p.id === newHost.id,
+                    player: { username: player.username, id: player.id },
+                    playerCount: remainingPlayers.length,
+                  })
+                );
+              }
+            });
+          });
+        } else {
+          // No hay más jugadores, cerrar la sala completamente
+          const existingInterval = gameIntervals.get(roomId);
+          if (existingInterval) {
+            clearInterval(existingInterval);
+            gameIntervals.delete(roomId);
+          }
+          
+          await storage.removePlayersByRoomId(roomId);
+          await storage.deleteRoom(roomId);
+        }
+      } else {
+        // Si un jugador normal abandona, solo se remueve de la lista
+        await storage.removePlayerBySocketId(socketId);
+        
+        const remainingPlayers = await storage.getPlayersByRoomId(roomId);
+        remainingPlayers.forEach((p) => {
+          wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN && (client as any).socketId === p.socketId) {
+              client.send(
+                JSON.stringify({
+                  type: "player_left",
+                  player: { username: player.username, id: player.id },
+                  playerCount: remainingPlayers.length,
+                })
+              );
+            }
+          });
+        });
+      }
+    });
+  });
+
+  return httpServer;
+}

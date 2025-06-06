@@ -1,0 +1,478 @@
+import { useState } from "react";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import { useSpeech } from "@/hooks/useSpeech";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BingoCard } from "@/components/BingoCard";
+import { GameControls } from "@/components/GameControls";
+import { HabboAvatar } from "@/components/HabboAvatar";
+import { Chat } from "@/components/Chat";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect, useRef } from "react";
+
+type Screen = "landing" | "options" | "game";
+
+export default function Game() {
+  const [currentScreen, setCurrentScreen] = useState<Screen>("landing");
+  const [username, setUsername] = useState("");
+  const [roomCodeInput, setRoomCodeInput] = useState("");
+  const [joinCodeInput, setJoinCodeInput] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [selectedServer, setSelectedServer] = useState<"origins" | "es">("origins");
+
+  const {
+    gameState,
+    error,
+    winner,
+    bingoNotification,
+    bingoAnnouncement,
+    chatMessages,
+    createRoom,
+    joinRoom,
+    startGame,
+    markNumber,
+    resetGame,
+    confirmBingo,
+    rejectBingo,
+    dismissBingoNotification,
+    dismissBingoAnnouncement,
+    sendMessage,
+    clearError,
+    clearWinner,
+  } = useWebSocket();
+
+  const { speakNumber, speakBingo } = useSpeech();
+  const { toast } = useToast();
+  const previousCurrentNumber = useRef<number | null>(null);
+
+  // Muestra errores
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      });
+      clearError();
+    }
+  }, [error, toast, clearError]);
+
+  // Cambia a pantalla de juego al unirse
+  useEffect(() => {
+    if (gameState.roomCode && currentScreen !== "game") {
+      setCurrentScreen("game");
+    }
+  }, [gameState.roomCode, currentScreen]);
+
+  // Llama número con voz
+  useEffect(() => {
+    if (
+      gameState.currentNumber !== null &&
+      gameState.currentNumber !== previousCurrentNumber.current &&
+      gameState.gameActive
+    ) {
+      speakNumber(gameState.currentNumber);
+      previousCurrentNumber.current = gameState.currentNumber;
+    }
+  }, [gameState.currentNumber, gameState.gameActive, speakNumber]);
+
+  // Llama "Bingo!" con voz
+  useEffect(() => {
+    if (winner) {
+      speakBingo();
+    }
+  }, [winner, speakBingo]);
+
+  const handleEnterGame = () => {
+    if (!username.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor ingresa tu nombre de usuario",
+        variant: "destructive",
+      });
+      return;
+    }
+    setCurrentScreen("options");
+  };
+
+  const handleCreateRoom = () => {
+    createRoom(username, roomCodeInput || undefined, selectedServer);
+    setShowCreateModal(false);
+    setRoomCodeInput("");
+  };
+
+  const handleJoinRoom = () => {
+    if (!joinCodeInput.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor ingresa el código de la sala",
+        variant: "destructive",
+      });
+      return;
+    }
+    joinRoom(username, joinCodeInput, selectedServer);
+    setShowJoinModal(false);
+    setJoinCodeInput("");
+  };
+
+  const handleLeaveRoom = () => {
+    setCurrentScreen("options");
+    window.location.reload(); // Reiniciar estado
+  };
+
+  if (currentScreen === "landing") {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 max-w-md w-full text-center border-4 border-habbo-purple shadow-2xl">
+          <div className="mb-8">
+            <h1 className="font-pixel text-2xl md:text-3xl text-white mb-2 animate-glow">HabboTicos</h1>
+            <h2 className="font-pixel text-lg habbo-pink">BINGO</h2>
+            <div className="w-20 h-1 bg-gradient-to-r from-habbo-purple to-habbo-pink mx-auto mt-4 rounded"></div>
+          </div>
+          <div className="flex justify-center mb-6">
+            <div className="w-8 h-8 bg-habbo-purple mr-2"></div>
+            <div className="w-8 h-8 bg-habbo-pink mr-2"></div>
+            <div className="w-8 h-8 bg-habbo-yellow"></div>
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <Input
+                type="text"
+                placeholder="Ingresa tu nombre de usuario de Habbo"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                maxLength={20}
+                className="w-full px-4 py-3 bg-white/20 border-2 border-habbo-purple text-white placeholder-white/70 focus:border-habbo-pink"
+                onKeyPress={(e) => e.key === "Enter" && handleEnterGame()}
+              />
+              {username.trim() && (
+                <div className="flex justify-center">
+                  <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-habbo-purple/50">
+                    <HabboAvatar
+                      username={username.trim()}
+                      fullAvatar={true}
+                      showInfo={true}
+                      showServerSelector={true}
+                      onServerChange={(server) => setSelectedServer(server)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <Button
+              onClick={handleEnterGame}
+              className="w-full bg-gradient-to-r from-habbo-purple to-purple-700 text-white font-bold py-3 px-6 hover:from-purple-700 hover:to-habbo-purple transform hover:scale-105 transition-all duration-200"
+            >
+              ¡ENTRAR AL JUEGO!
+            </Button>
+          </div>
+          <div className="mt-6 text-white/80 text-sm space-y-1">
+            <p>🎮 Juego multijugador en tiempo real</p>
+            <p>🏆 Marca manualmente tus números</p>
+            <p>👑 El host controla las partidas</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentScreen === "options") {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 max-w-lg w-full text-center border-4 border-habbo-purple shadow-2xl">
+            <div className="mb-6">
+              <h2 className="font-pixel text-xl text-white mb-2">
+                ¡Hola{" "}
+                <span className="habbo-pink">{username}</span>!
+              </h2>
+              <p className="text-white/80">¿Qué quieres hacer?</p>
+            </div>
+            <div className="space-y-4">
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                className="w-full bg-gradient-to-r from-habbo-green to-green-600 text-white font-bold py-4 px-6 hover:from-green-600 hover:to-habbo-green transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2"
+              >
+                <span>👑</span>
+                <span>CREAR SALA</span>
+              </Button>
+              <Button
+                onClick={() => setShowJoinModal(true)}
+                className="w-full bg-gradient-to-r from-habbo-purple to-purple-700 text-white font-bold py-4 px-6 hover:from-purple-700 hover:to-habbo-purple flex items-center justify-center space-x-2 transform hover:scale-105 transition-all duration-200"
+              >
+                <span>🚪</span>
+                <span>UNIRSE A SALA</span>
+              </Button>
+              <Button
+                onClick={() => setCurrentScreen("landing")}
+                variant="outline"
+                className="w-full bg-white/20 text-white font-medium py-2 px-4 hover:bg-white/30 border-white/30"
+              >
+                ← Volver
+              </Button>
+            </div>
+          </div>
+
+          {/* Modal - Crear Sala */}
+          <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+            <DialogContent className="bg-white/10 backdrop-blur-md border-4 border-habbo-green">
+              <DialogHeader>
+                <DialogTitle className="font-pixel text-lg text-white text-center">CREAR SALA</DialogTitle>
+              </DialogHeader>
+              <div id="create-room-description" className="sr-only">
+                Formulario para crear una nueva sala de Bingo
+              </div>
+              <div className="space-y-4">
+                <Input
+                  type="text"
+                  placeholder="Código de la sala (opcional)"
+                  value={roomCodeInput}
+                  onChange={(e) => setRoomCodeInput(e.target.value)}
+                  maxLength={10}
+                  className="w-full px-4 py-3 bg-white/20 border-2 border-habbo-green text-white placeholder-white/70 focus:border-habbo-pink"
+                />
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleCreateRoom}
+                    className="flex-1 bg-habbo-green text-white font-bold hover:bg-green-600"
+                  >
+                    Crear
+                  </Button>
+                  <Button
+                    onClick={() => setShowCreateModal(false)}
+                    variant="outline"
+                    className="flex-1 bg-white/20 text-white font-medium hover:bg-white/30 border-white/30"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Modal - Unirse a Sala */}
+          <Dialog open={showJoinModal} onOpenChange={setShowJoinModal}>
+            <DialogContent className="bg-white/10 backdrop-blur-md border-4 border-habbo-purple">
+              <DialogHeader>
+                <DialogTitle className="font-pixel text-lg text-white text-center">UNIRSE A SALA</DialogTitle>
+              </DialogHeader>
+              <div id="join-room-description" className="sr-only">
+                Formulario para unirse a una sala existente
+              </div>
+              <div className="space-y-4">
+                <Input
+                  type="text"
+                  placeholder="Ingresa el código de la sala"
+                  value={joinCodeInput}
+                  onChange={(e) => setJoinCodeInput(e.target.value)}
+                  maxLength={10}
+                  className="w-full px-4 py-3 bg-white/20 border-2 border-habbo-purple text-white placeholder-white/70 focus:border-habbo-pink"
+                  onKeyPress={(e) => e.key === "Enter" && handleJoinRoom()}
+                />
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleJoinRoom}
+                    className="flex-1 bg-habbo-purple text-white font-bold hover:bg-purple-700"
+                  >
+                    Unirse
+                  </Button>
+                  <Button
+                    onClick={() => setShowJoinModal(false)}
+                    variant="outline"
+                    className="flex-1 bg-white/20 text-white font-medium hover:bg-white/30 border-white/30"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </>
+    );
+  }
+
+  // Pantalla principal del juego
+  return (
+    <>
+      <div className="min-h-screen p-4">
+        {/* Encabezado */}
+        <div className="max-w-7xl mx-auto mb-6">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border-2 border-habbo-purple">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+              <div className="text-white">
+                <h2 className="font-pixel text-lg">Sala: <span className="habbo-pink">{gameState.roomCode}</span></h2>
+                <p className="text-sm opacity-80">Jugadores conectados: {gameState.playerCount}</p>
+              </div>
+              <GameControls
+                isHost={gameState.isHost}
+                gameActive={gameState.gameActive}
+                onStartGame={startGame}
+                onResetGame={resetGame}
+                onLeaveRoom={handleLeaveRoom}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-4 gap-6">
+          {/* Cartón de Bingo */}
+          <div className="lg:col-span-2">
+            <BingoCard
+              bingoCard={gameState.bingoCard}
+              markedNumbers={gameState.markedNumbers}
+              calledNumbers={gameState.calledNumbers}
+              onMarkNumber={markNumber}
+              disabled={gameState.gameBlocked}
+            />
+          </div>
+
+          {/* Números cantados + Jugadores */}
+          <div className="space-y-4">
+            {/* Número actual */}
+            <Card className="bg-white/10 backdrop-blur-md border-2 border-habbo-pink">
+              <CardContent className="p-6 text-center">
+                <h4 className="text-white font-bold mb-2">NÚMERO ACTUAL</h4>
+                <div className="text-5xl font-pixel habbo-pink mb-2">
+                  {gameState.currentNumber || "--"}
+                </div>
+                <p className="text-white/80 text-sm">
+                  {gameState.gameActive ? "Juego en progreso..." : "Esperando inicio..."}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Números Cantados */}
+            <Card className="bg-white/10 backdrop-blur-md border-2 border-habbo-yellow">
+              <CardContent className="p-4">
+                <h4 className="text-white font-bold mb-3 text-center">NÚMEROS CANTADOS</h4>
+                <div className="grid grid-cols-5 gap-1" style={{ maxHeight: `${Math.min(gameState.calledNumbers.length * 8 + 40, 240)}px`, overflowY: gameState.calledNumbers.length > 25 ? 'auto' : 'visible' }}>
+                  {gameState.calledNumbers.map((number) => (
+                    <div key={number} className="bg-habbo-yellow text-black text-sm font-bold rounded p-1 text-center">
+                      {number}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Lista de jugadores */}
+            <Card className="bg-white/10 backdrop-blur-md border-2 border-habbo-purple">
+              <CardContent className="p-4">
+                <h4 className="text-white font-bold mb-3 text-center">JUGADORES</h4>
+                <div className="space-y-3" style={{ maxHeight: `${Math.min(gameState.players.length * 70 + 20, 240)}px`, overflowY: gameState.players.length > 3 ? 'auto' : 'visible' }}>
+                  {gameState.players.map((player, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <HabboAvatar
+                        username={player.username}
+                        size="small"
+                        showInfo={true}
+                        className="flex-1"
+                        server={player.server || "origins"}
+                      />
+                      {player.isHost && <span className="text-habbo-yellow ml-2">👑</span>}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Chat fijo */}
+          <div className="space-y-4">
+            <Chat
+              messages={chatMessages || []}
+              onSendMessage={sendMessage}
+              currentUsername={gameState.username}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Modal de Notificación de Bingo (solo para host) */}
+      <Dialog open={!!bingoNotification} onOpenChange={() => dismissBingoNotification()}>
+        <DialogContent className="bg-white/10 backdrop-blur-md border-4 border-habbo-pink">
+          <DialogHeader>
+            <DialogTitle className="font-pixel text-2xl habbo-pink mb-4 text-center">¡BINGO DETECTADO!</DialogTitle>
+            <div className="text-center">
+              <div className="text-6xl mb-4">🎊</div>
+              <p className="text-white text-lg mb-6 text-center">
+                {bingoNotification?.winner} dice que tiene BINGO!
+              </p>
+              <p className="text-white/80 text-sm mb-6">
+                Como host, puedes confirmar o rechazar este bingo.
+              </p>
+              <div className="flex space-x-4 justify-center">
+                <Button
+                  onClick={() => confirmBingo(bingoNotification!.winnerId)}
+                  className="bg-habbo-green text-white font-bold hover:bg-green-600"
+                >
+                  ✓ Confirmar Bingo
+                </Button>
+                <Button
+                  onClick={() => rejectBingo()}
+                  variant="outline"
+                  className="bg-red-600 text-white font-medium hover:bg-red-700 border-red-600"
+                >
+                  ✗ Rechazar
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Anuncio de Bingo (para jugadores no-host) */}
+      <Dialog open={!!bingoAnnouncement} onOpenChange={gameState.gameBlocked ? undefined : () => dismissBingoAnnouncement()}>
+        <DialogContent className="bg-white/10 backdrop-blur-md border-4 border-habbo-yellow">
+          <DialogHeader>
+            <DialogTitle className="font-pixel text-xl habbo-yellow mb-4 text-center">¡BINGO CANTADO!</DialogTitle>
+            <div className="text-center">
+              <div className="text-5xl mb-4">🎊</div>
+              <p className="text-white text-lg mb-6 text-center">
+                {bingoAnnouncement}
+              </p>
+              {gameState.gameBlocked ? (
+                <div className="text-white/80 text-sm mb-4">
+                  Esperando que el host verifique el bingo...
+                </div>
+              ) : (
+                <Button
+                  onClick={() => dismissBingoAnnouncement()}
+                  className="mx-auto bg-habbo-yellow text-black font-bold hover:bg-yellow-400"
+                >
+                  Entendido
+                </Button>
+              )}
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Ganador */}
+      <Dialog open={!!winner} onOpenChange={() => clearWinner()}>
+        <DialogContent className="bg-white/10 backdrop-blur-md border-4 border-habbo-yellow">
+          <DialogHeader>
+            <DialogTitle className="font-pixel text-2xl habbo-yellow mb-4 text-center">¡BINGO!</DialogTitle>
+            <div className="text-center">
+              <div className="text-6xl mb-4">🎉</div>
+              <p className="text-white text-lg mb-6 text-center">
+                {winner === gameState.username ? "¡Felicitaciones, ganaste!" : `¡${winner} ganó!`}
+              </p>
+              <Button
+                onClick={() => clearWinner()}
+                className="mx-auto bg-habbo-yellow text-black font-bold hover:bg-yellow-400"
+              >
+                ¡Genial!
+              </Button>
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+    </>
+  );
+}

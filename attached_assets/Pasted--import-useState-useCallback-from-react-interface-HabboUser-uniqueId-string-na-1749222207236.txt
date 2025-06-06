@@ -1,0 +1,86 @@
+
+import { useState, useCallback } from 'react';
+
+interface HabboUser {
+  uniqueId: string;
+  name: string;
+  motto: string;
+  buildersClubMember: boolean;
+  habboClubMember: boolean;
+  lastAccessTime: string;
+  creationTime: string;
+  profileVisible: boolean;
+  selectedBadges: Array<{
+    badgeIndex: number;
+    code: string;
+    name: string;
+    description: string;
+  }>;
+}
+
+export type HabboServer = 'origins' | 'es';
+
+export function useHabboAPI() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getHabboUser = useCallback(async (username: string, server: HabboServer = 'origins'): Promise<HabboUser | null> => {
+    if (!username.trim()) return null;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const baseUrl = server === 'origins' 
+        ? 'https://origins.habbo.es/api/public/users'
+        : 'https://www.habbo.es/api/public/users';
+      
+      const response = await fetch(`${baseUrl}?name=${encodeURIComponent(username)}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          const serverName = server === 'origins' ? 'Habbo Origins' : 'Habbo España';
+          setError(`Usuario no encontrado en ${serverName}`);
+          return null;
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const userData: HabboUser = await response.json();
+      return userData;
+    } catch (err) {
+      console.error('Error fetching Habbo user:', err);
+      const serverName = server === 'origins' ? 'Habbo Origins' : 'Habbo España';
+      
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getAvatarUrl = useCallback((username: string, size: 'small' | 'large' = 'small', server: HabboServer = 'origins') => {
+    const sizeParam = size === 'large' ? 'b' : 's';
+    const baseUrl = server === 'origins' 
+      ? 'https://www.habbo.es/habbo-imaging/avatarimage'
+      : 'https://www.habbo.es/habbo-imaging/avatarimage';
+    
+    return `${baseUrl}?user=${encodeURIComponent(username)}&action=std&direction=2&head_direction=3&gesture=std&size=${sizeParam}`;
+  }, []);
+
+  const getFullAvatarUrl = useCallback((username: string) => {
+    return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&=none,crr=5&direction=2&head_direction=2&gesture=std&size=m`;
+  }, []);
+
+  const getHeadOnlyAvatarUrl = useCallback((username: string) => {
+    return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=2&head_direction=2&gesture=std&size=m&headonly=1`;
+  }, []);
+
+  return {
+    getHabboUser,
+    getAvatarUrl,
+    getFullAvatarUrl,
+    getHeadOnlyAvatarUrl,
+    loading,
+    error
+  };
+}
