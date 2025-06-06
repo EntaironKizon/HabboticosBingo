@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useHabboAPI, HabboServer } from '@/hooks/useHabboAPI';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -59,13 +58,13 @@ export function HabboAvatar({
 
   if (headOnly) {
     avatarUrl = getHeadOnlyAvatarUrl(username, selectedServer, figureString);
-    avatarSize = 'h-10 w-10';
+    avatarSize = 'h-16 w-16 md:h-18 md:w-18';
   } else if (fullAvatar) {
     avatarUrl = getFullAvatarUrl(username, selectedServer, figureString);
-    avatarSize = 'h-20 w-20';
+    avatarSize = 'h-[110px] w-16';
   } else {
     avatarUrl = getAvatarUrl(username, size, selectedServer, figureString);
-    avatarSize = size === 'large' ? 'h-16 w-16' : 'h-14 w-8';
+    avatarSize = size === 'large' ? 'h-16 w-16 md:h-18 md:w-18' : 'h-12 w-10 md:h-14 md:w-12';
   }
 
   if (loading && showInfo) {
@@ -122,7 +121,7 @@ export function HabboAvatar({
           </Button>
         </div>
       )}
-      
+
       <div className="flex items-center space-x-3">
         <div className={`${avatarSize} flex items-center justify-center overflow-hidden ${size === 'small' ? 'rounded' : 'rounded-lg'}`}>
           <img 
@@ -133,7 +132,7 @@ export function HabboAvatar({
             style={{ imageRendering: 'pixelated' }}
           />
         </div>
-        
+
         {showInfo && (
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
