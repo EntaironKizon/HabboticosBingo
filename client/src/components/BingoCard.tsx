@@ -8,12 +8,15 @@ interface BingoCardProps {
   disabled?: boolean;
 }
 
-export function BingoCard({ bingoCard, markedNumbers, calledNumbers, onMarkNumber, disabled = false }: BingoCardProps) {
+export function BingoCard({
+  bingoCard,
+  markedNumbers,
+  calledNumbers,
+  onMarkNumber,
+  disabled = false,
+}: BingoCardProps) {
   const handleCellClick = (number: number | string) => {
-    // Si el juego está deshabilitado (bloqueado), no permitir clics
-    if (disabled) {
-      return;
-    }
+    if (disabled) return;
 
     console.log('BingoCard click:', {
       number,
@@ -21,16 +24,13 @@ export function BingoCard({ bingoCard, markedNumbers, calledNumbers, onMarkNumbe
       isIncluded: calledNumbers.includes(number as number)
     });
 
-    // La casilla FREE se puede marcar siempre
     if (number === 'FREE') {
       onMarkNumber(number);
       return;
     }
 
-    // Check if number has been called
     if (!calledNumbers.includes(number as number)) {
       console.log('Number not called yet, showing shake animation');
-      // Add shake animation for invalid clicks
       const cell = document.querySelector(`[data-number="${number}"]`);
       if (cell) {
         cell.classList.add('shake');
@@ -58,31 +58,38 @@ export function BingoCard({ bingoCard, markedNumbers, calledNumbers, onMarkNumbe
       "bg-white/10 backdrop-blur-md rounded-2xl p-6 border-4 border-habbo-purple",
       disabled && "opacity-60"
     )}>
-      <h3 className="font-pixel text-white text-center mb-4">
+      <h3 className="font-pixel text-white text-center mb-4 text-xl">
         TU CARTÓN
         {disabled && <span className="text-red-400 block text-sm">BLOQUEADO</span>}
       </h3>
 
-      {/* Bingo Header (B-I-N-G-O) */}
+      {/* B-I-N-G-O Header */}
       <div className="grid grid-cols-5 gap-2 mb-2">
         {['B', 'I', 'N', 'G', 'O'].map((letter) => (
-          <div key={letter} className="bg-habbo-purple text-white font-pixel text-center py-2 rounded">
+          <div key={letter} className="bg-habbo-purple text-white font-pixel text-center py-2 rounded text-lg">
             {letter}
           </div>
         ))}
       </div>
 
-      {/* Bingo Numbers Grid */}
+      {/* Grid de números */}
       <div className="grid grid-cols-5 gap-2">
         {bingoCard.map((number, index) => {
-          const displayValue = number === 'FREE' ? 'FREE' : number.toString();
+          const displayValue = number === 'FREE' ? (
+            // Estrella en lugar de "FREE"
+            <span className="text-2xl font-extrabold text-habbo-purple drop-shadow-md z-10">
+              ⭐
+            </span>
+          ) : (
+            number.toString()
+          );
 
           return (
             <div
               key={index}
               data-number={number}
               className={cn(
-                "bingo-number bg-white border-2 border-habbo-purple rounded-lg flex items-center justify-center text-sm font-bold",
+                "bingo-number bg-white border-2 border-habbo-purple rounded-lg flex items-center justify-center relative",
                 !disabled && "hover:bg-gray-100 cursor-pointer",
                 disabled && "cursor-not-allowed",
                 isMarked(number) && "marked",
@@ -90,7 +97,24 @@ export function BingoCard({ bingoCard, markedNumbers, calledNumbers, onMarkNumbe
               )}
               onClick={() => handleCellClick(number)}
             >
-              {displayValue}
+              <div className="relative w-full h-full flex items-center justify-center">
+                {/* Mostrar o ocultar el número según si está marcado */}
+                <span
+                  className={cn(
+                    "text-2xl font-extrabold text-habbo-purple drop-shadow-md z-10",
+                    isMarked(number) && "hidden"
+                  )}
+                >
+                  {displayValue}
+                </span>
+
+                {/* Icono de estrella cuando está marcado */}
+                {isMarked(number) && (
+                  <span className="star-icon absolute inset-0 m-auto w-6 h-6 text-yellow-400 animate-pulse">
+                    ⭐
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}
