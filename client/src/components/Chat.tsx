@@ -16,6 +16,30 @@ interface ChatProps {
 export function Chat({ messages, onSendMessage, currentUsername }: ChatProps) {
   const [newMessage, setNewMessage] = useState("");
 
+  // Función para generar color de borde basado en el username
+  const getBorderColorFromUsername = (username: string) => {
+    const colors = [
+      'border-habbo-purple shadow-purple-500/30',
+      'border-habbo-pink shadow-pink-500/30', 
+      'border-habbo-green shadow-green-500/30',
+      'border-habbo-yellow shadow-yellow-500/30',
+      'border-blue-500 shadow-blue-500/30',
+      'border-orange-500 shadow-orange-500/30',
+      'border-red-500 shadow-red-500/30',
+      'border-indigo-500 shadow-indigo-500/30'
+    ];
+    
+    // Usar el hash del username para generar un índice consistente
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      const char = username.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    return colors[Math.abs(hash) % colors.length];
+  };
+
   const handleSendMessage = () => {
     if (newMessage.trim()) {
       onSendMessage(newMessage.trim());
@@ -47,21 +71,24 @@ export function Chat({ messages, onSendMessage, currentUsername }: ChatProps) {
                 No hay mensajes aún...
               </div>
             ) : (
-              messages.slice(-10).map((msg, index) => (
-                <div key={index} className="flex items-center space-x-2 animate-in slide-in-from-bottom-2 duration-300">
-                  <div className="flex-shrink-0">
-                    <HabboAvatar
-                      username={msg.username}
-                      headOnly={true}
-                      server={msg.server || 'origins'}
-                      className="flex-shrink-0"
-                    />
+              messages.slice(-10).map((msg, index) => {
+                const borderColor = getBorderColorFromUsername(msg.username);
+                return (
+                  <div key={index} className="flex items-center space-x-2 animate-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex-shrink-0">
+                      <HabboAvatar
+                        username={msg.username}
+                        headOnly={true}
+                        server={msg.server || 'origins'}
+                        className="flex-shrink-0"
+                      />
+                    </div>
+                    <div className={`flex-1 bg-white/90 text-black px-3 py-2 rounded-full text-sm max-w-xs leading-tight border-2 ${borderColor} transition-all`}>
+                      <span className="font-medium">{msg.username}:</span> {msg.message}
+                    </div>
                   </div>
-                  <div className="flex-1 bg-white/90 text-black px-3 py-1 rounded-full text-sm max-w-xs leading-tight">
-                    <span className="font-medium">{msg.username}:</span> {msg.message}
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
