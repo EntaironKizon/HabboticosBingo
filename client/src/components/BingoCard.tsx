@@ -26,6 +26,7 @@ export function BingoCard({
 
     if (number === 'FREE') {
       onMarkNumber(number);
+      playSoftTone(); // ✅ Sonido suave y más bajo para FREE
       return;
     }
 
@@ -41,6 +42,7 @@ export function BingoCard({
 
     console.log('Calling onMarkNumber with:', number);
     onMarkNumber(number);
+    playSoftTone(); // ✅ Sonido suave y más bajo al marcar número
   };
 
   const isMarked = (number: number | string) => {
@@ -51,6 +53,23 @@ export function BingoCard({
   const isCalled = (number: number | string) => {
     if (number === 'FREE') return false;
     return calledNumbers.includes(number as number);
+  };
+
+  // 🎵 Función: Tono suave y agradable (volumen reducido a la mitad)
+  const playSoftTone = () => {
+    const context = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+
+    oscillator.type = 'triangle'; // Sonido más cálido
+    oscillator.frequency.setValueAtTime(600, context.currentTime); // Frecuencia media-baja
+    gainNode.gain.setValueAtTime(0.15, context.currentTime); // Volumen reducido a la mitad
+    gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.5); // Duración larga y suave
+
+    oscillator.connect(gainNode).connect(context.destination);
+
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.5); // Totalmente suave y agradable
   };
 
   return (
@@ -76,7 +95,6 @@ export function BingoCard({
       <div className="grid grid-cols-5 gap-2">
         {bingoCard.map((number, index) => {
           const displayValue = number === 'FREE' ? (
-            // Estrella en lugar de "FREE"
             <span className="text-2xl font-extrabold text-habbo-purple drop-shadow-md z-10">
               ⭐
             </span>
@@ -98,7 +116,6 @@ export function BingoCard({
               onClick={() => handleCellClick(number)}
             >
               <div className="relative w-full h-full flex items-center justify-center">
-                {/* Mostrar o ocultar el número según si está marcado */}
                 <span
                   className={cn(
                     "text-2xl font-extrabold text-habbo-purple drop-shadow-md z-10",
@@ -108,7 +125,6 @@ export function BingoCard({
                   {displayValue}
                 </span>
 
-                {/* Icono de estrella cuando está marcado si */}
                 {isMarked(number) && (
                   <span className="star-icon absolute inset-0 m-auto w-6 h-6 text-yellow-400 animate-pulse">
                     ⭐
