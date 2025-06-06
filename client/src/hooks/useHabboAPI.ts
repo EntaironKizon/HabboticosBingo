@@ -40,8 +40,6 @@ export function useHabboAPI() {
       
       if (!response.ok) {
         if (response.status === 404) {
-          const serverName = server === 'origins' ? 'Habbo Origins' : 'Habbo España';
-          setError(`Usuario no encontrado en ${serverName}`);
           return null;
         }
         throw new Error(`HTTP ${response.status}`);
