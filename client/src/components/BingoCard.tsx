@@ -108,7 +108,7 @@ export function BingoCard({
                   {displayValue}
                 </span>
 
-                {/* Icono de estrella cuando está marcado */}
+                {/* Icono de estrella cuando está marcado si */}
                 {isMarked(number) && (
                   <span className="star-icon absolute inset-0 m-auto w-6 h-6 text-yellow-400 animate-pulse">
                     ⭐
