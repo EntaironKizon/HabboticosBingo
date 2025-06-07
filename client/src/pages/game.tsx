@@ -188,6 +188,16 @@ export default function Game() {
             <p>👑 El host controla las partidas</p>
           </div>
         </div>
+        
+        {/* Información legal y créditos en la parte inferior */}
+        <div className="fixed bottom-0 left-0 right-0 bg-black/30 backdrop-blur-sm py-2 text-center">
+          <div className="text-white/40 text-xs leading-tight px-2">
+            <p>Este juego no está afiliado, respaldado ni aprobado por Sulake Corporation Oy o sus Afiliados. De acuerdo con la Política de Webs fans de Habbo, este contenido puede utilizar la propiedad intelectual de Habbo bajo permiso no comercial.</p>
+          </div>
+          <div className="font-pixel text-xs text-habbo-pink mt-1">
+            
+          </div>
+        </div>
       </div>
     );
   }
