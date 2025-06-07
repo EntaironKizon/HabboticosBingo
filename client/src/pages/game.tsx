@@ -128,14 +128,27 @@ export default function Game() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 max-w-md w-full text-center border-4 border-habbo-purple shadow-2xl">
           <div className="mb-8">
-            <h1 className="font-pixel text-2xl md:text-3xl text-white mb-2 animate-glow">HabboTicos</h1>
-            <h2 className="font-pixel text-lg habbo-pink">BINGO</h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-habbo-purple to-habbo-pink mx-auto mt-4 rounded"></div>
-          </div>
-          <div className="flex justify-center mb-6">
-            <div className="w-8 h-8 bg-habbo-purple mr-2"></div>
-            <div className="w-8 h-8 bg-habbo-pink mr-2"></div>
-            <div className="w-8 h-8 bg-habbo-yellow"></div>
+            <div className="mb-4">
+              <img 
+                src="https://habboticos.com/wp-content/uploads/2025/03/LogoHT5_3.gif" 
+                alt="HabboTicos Logo" 
+                className="mx-auto max-w-full h-auto"
+              />
+            </div>
+            <div className="font-pixel text-2xl md:text-3xl habbo-pink flex justify-center items-center space-x-1 mt-4">
+              <span className="animate-wave-1">B</span>
+              <span className="animate-wave-2">I</span>
+              <span className="animate-wave-3">N</span>
+              <span className="animate-wave-4">G</span>
+              <span className="animate-wave-5">O</span>
+            </div>
+            <div className="flex justify-center mt-3 mb-6">
+              <div className="w-6 h-2 bg-habbo-purple mr-1 rounded animate-bar-1"></div>
+              <div className="w-6 h-2 bg-habbo-pink mr-1 rounded animate-bar-2"></div>
+              <div className="w-6 h-2 bg-habbo-yellow mr-1 rounded animate-bar-3"></div>
+              <div className="w-6 h-2 bg-habbo-green mr-1 rounded animate-bar-4"></div>
+              <div className="w-6 h-2 bg-habbo-red rounded animate-bar-5"></div>
+            </div>
           </div>
           <div className="space-y-4">
             <div className="space-y-3">
