@@ -317,7 +317,26 @@ export default function Game() {
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border-2 border-habbo-purple">
             <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
               <div className="text-white">
-                <h2 className="font-pixel text-lg">Sala: <span className="habbo-pink">{gameState.roomCode}</span></h2>
+                <div className="flex items-center space-x-2">
+                  <h2 className="font-pixel text-lg">Sala: <span className="habbo-pink">{gameState.roomCode}</span></h2>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(gameState.roomCode);
+                      const toastInstance = toast({
+                        title: "¡Copiado!",
+                        description: "Código copiado al portapapeles",
+                      });
+                      // Auto-dismiss después de 2 segundos
+                      setTimeout(() => {
+                        toastInstance.dismiss();
+                      }, 2000);
+                    }}
+                    className="inline-flex items-center justify-center w-6 h-6 bg-habbo-yellow/20 hover:bg-habbo-yellow/60 hover:scale-110 text-habbo-yellow hover:text-black rounded text-xs transition-all duration-300 border border-habbo-yellow/30 hover:border-habbo-yellow hover:shadow-lg hover:shadow-habbo-yellow/25 cursor-pointer"
+                    title="Copiar código de sala"
+                  >
+                    📋
+                  </button>
+                </div>
                 <p className="text-sm opacity-80">Jugadores conectados: {gameState.playerCount}</p>
               </div>
               <GameControls
