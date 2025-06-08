@@ -191,6 +191,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return;
             }
 
+            // Verificar si la partida ya está activa
+            if (room.isGameActive) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "No puedes unirte a una sala con partida en curso" })
+              );
+              return;
+            }
+
             const bingoCard = generateBingoCard();
             const player = await storage.createPlayer({
               username,
@@ -353,11 +361,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             // Verificar si hay un bingo pendiente de verificación que bloquee el juego
+            // TODOS los jugadores (incluido el host) quedan bloqueados durante la verificación
             if (room.pendingBingoVerification) {
+              const message = player.isHost ? 
+                "Debes verificar el bingo antes de continuar. Usa los botones Verificar o Cancelar." :
+                "El juego está bloqueado esperando verificación de bingo por el host";
+              
               ws.send(
                 JSON.stringify({ 
                   type: "error", 
-                  message: "El juego está bloqueado esperando verificación de bingo por el host" 
+                  message: message
                 })
               );
               return;
@@ -638,6 +651,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     JSON.stringify({
                       type: "game_reset",
                       bingoCard: playerData?.bingoCard,
+                    })
+                  );
+                }
+              });
+            });
+
+            break;
+          }
+
+          case "kick_player": {
+            const { playerId } = message;
+            const host = await storage.getPlayerBySocketId(socketId);
+            if (!host || !host.isHost) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Solo el host puede expulsar jugadores" })
+              );
+              return;
+            }
+
+            const playerToKick = await storage.getPlayerById(playerId);
+            if (!playerToKick) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "Jugador no encontrado" })
+              );
+              return;
+            }
+
+            // No permitir que el host se expulse a sí mismo
+            if (playerToKick.isHost) {
+              ws.send(
+                JSON.stringify({ type: "error", message: "El host no puede expulsarse a sí mismo" })
+              );
+              return;
+            }
+
+            // Notificar al jugador expulsado
+            wss.clients.forEach((client) => {
+              if (
+                client.readyState === WebSocket.OPEN &&
+                (client as any).socketId === playerToKick.socketId
+              ) {
+                client.send(
+                  JSON.stringify({ 
+                    type: "kicked_from_room", 
+                    message: "Has sido expulsado de la sala por el host" 
+                  })
+                );
+                client.close();
+              }
+            });
+
+            // Remover al jugador de la base de datos
+            await storage.removePlayerBySocketId(playerToKick.socketId);
+
+            // Notificar a todos los jugadores restantes
+            const remainingPlayers = await storage.getPlayersByRoomId(host.roomId!);
+            remainingPlayers.forEach((p) => {
+              wss.clients.forEach((client) => {
+                if (
+                  client.readyState === WebSocket.OPEN &&
+                  (client as any).socketId === p.socketId
+                ) {
+                  client.send(
+                    JSON.stringify({
+                      type: "player_kicked",
+                      kickedPlayer: playerToKick.username,
+                      players: remainingPlayers,
+                      playerCount: remainingPlayers.length,
                     })
                   );
                 }
