@@ -203,6 +203,23 @@
   .bingo-number.called {
     animation: glow 1s ease-in-out;
   }
+
+  .bingo-number.bingo-line-winner {
+    background: linear-gradient(45deg, #FFD700, #FFA500, #FF6347) !important;
+    border-color: #FFD700 !important;
+    border-width: 3px !important;
+    animation: bingo-celebration 2s ease-in-out infinite;
+    box-shadow: 0 0 15px #FFD700, 0 0 25px #FFD700, 0 0 35px #FFD700 !important;
+  }
+
+  .bingo-letter {
+    text-shadow: 
+      2px 2px 0px #000,
+      -2px -2px 0px #000,
+      2px -2px 0px #000,
+      -2px 2px 0px #000,
+      0 0 10px #FFD700;
+  }
 }
 
 @keyframes glow {
@@ -255,6 +272,17 @@
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-5px); }
   75% { transform: translateX(5px); }
+}
+
+@keyframes bingo-celebration {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 15px #FFD700, 0 0 25px #FFD700, 0 0 35px #FFD700;
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #FFD700, 0 0 35px #FFD700, 0 0 50px #FFD700;
+  }
 }
 
 .shake {
