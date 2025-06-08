@@ -40,6 +40,7 @@ export default function Game() {
     dismissBingoNotification,
     dismissBingoAnnouncement,
     sendMessage,
+    kickPlayer,
     clearError,
     clearWinner,
   } = useWebSocket();
@@ -415,7 +416,31 @@ export default function Game() {
                         className="flex-1"
                         server={player.server || "origins"}
                       />
-                      {player.isHost && <span className="text-habbo-yellow ml-2">👑</span>}
+                      <div className="flex items-center space-x-1">
+                        {player.isHost && <span className="text-habbo-yellow ml-2">👑</span>}
+                        {gameState.isHost && !player.isHost && (
+                          <div className="relative group">
+                            <button
+                              className="w-6 h-6 bg-red-600/20 hover:bg-red-600/60 text-red-400 hover:text-white rounded text-xs transition-all duration-200 border border-red-600/30 hover:border-red-600"
+                              title="Opciones de moderación"
+                            >
+                              ⚙️
+                            </button>
+                            <div className="absolute right-0 top-full mt-1 bg-white/10 backdrop-blur-md border border-red-600 rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-50 min-w-max">
+                              <button
+                                onClick={() => {
+                                  if (confirm(`¿Estás seguro de que quieres expulsar a ${player.username}?`)) {
+                                    kickPlayer(player.id);
+                                  }
+                                }}
+                                className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded font-medium transition-colors duration-200"
+                              >
+                                🚫 Expulsar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -434,38 +459,36 @@ export default function Game() {
         </div>
       </div>
 
-      {/* Modal de Notificación de Bingo (solo para host) */}
-      <Dialog open={!!bingoNotification} onOpenChange={() => dismissBingoNotification()}>
-        <DialogContent className="bg-white/10 backdrop-blur-md border-4 border-habbo-pink">
-          <DialogHeader>
-            <DialogTitle className="font-pixel text-2xl habbo-pink mb-4 text-center">¡BINGO DETECTADO!</DialogTitle>
-            <div className="text-center">
-              <div className="text-6xl mb-4">🎊</div>
-              <p className="text-white text-lg mb-6 text-center">
-                {bingoNotification?.winner} dice que tiene BINGO!
-              </p>
-              <p className="text-white/80 text-sm mb-6">
-                Como host, puedes confirmar o rechazar este bingo.
-              </p>
-              <div className="flex space-x-4 justify-center">
-                <Button
-                  onClick={() => confirmBingo(bingoNotification!.winnerId)}
-                  className="bg-habbo-green text-white font-bold hover:bg-green-600"
-                >
-                  ✓ Confirmar Bingo
-                </Button>
-                <Button
-                  onClick={() => rejectBingo()}
-                  variant="outline"
-                  className="bg-red-600 text-white font-medium hover:bg-red-700 border-red-600"
-                >
-                  ✗ Rechazar
-                </Button>
-              </div>
+      {/* Panel de Verificación de Bingo (solo para host) - Posición fija arriba a la derecha */}
+      {bingoNotification && (
+        <div className="fixed top-4 right-4 z-50 bg-white/10 backdrop-blur-md border-4 border-habbo-pink rounded-2xl p-6 shadow-2xl max-w-md animate-in slide-in-from-right duration-300">
+          <div className="text-center">
+            <h3 className="font-pixel text-xl habbo-pink mb-4">¡BINGO DETECTADO!</h3>
+            <div className="text-4xl mb-4">🎊</div>
+            <p className="text-white text-lg mb-4">
+              {bingoNotification.winner} dice que tiene BINGO!
+            </p>
+            <p className="text-white/80 text-sm mb-6">
+              Como host, debes verificar este bingo.
+            </p>
+            <div className="flex flex-col space-y-3">
+              <Button
+                onClick={() => confirmBingo(bingoNotification.winnerId)}
+                className="w-full bg-habbo-green text-white font-bold hover:bg-green-600 py-3"
+              >
+                ✓ Confirmar Bingo
+              </Button>
+              <Button
+                onClick={() => rejectBingo()}
+                variant="outline"
+                className="w-full bg-red-600 text-white font-medium hover:bg-red-700 border-red-600 py-3"
+              >
+                ✗ Rechazar
+              </Button>
             </div>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Anuncio de Bingo (para jugadores no-host) */}
       <Dialog open={!!bingoAnnouncement} onOpenChange={gameState.gameBlocked ? undefined : () => dismissBingoAnnouncement()}>
