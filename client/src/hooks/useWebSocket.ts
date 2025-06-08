@@ -98,6 +98,32 @@ export function useWebSocket() {
             }));
             break;
 
+          case "player_kicked":
+            setGameState((prev) => ({
+              ...prev,
+              players: message.players,
+              playerCount: message.playerCount,
+            }));
+            break;
+
+          case "kicked_from_room":
+            setError(message.message);
+            // Resetear el estado del juego
+            setGameState({
+              username: "",
+              roomCode: "",
+              isHost: false,
+              gameActive: false,
+              gameBlocked: false,
+              bingoCard: [],
+              markedNumbers: [],
+              calledNumbers: [],
+              currentNumber: null,
+              players: [],
+              playerCount: 0,
+            });
+            break;
+
           case "host_changed":
             setGameState((prev) => ({
               ...prev,
@@ -134,6 +160,8 @@ export function useWebSocket() {
               winner: message.winner,
               winnerId: message.winnerId
             });
+            // Bloquear también al host durante la verificación
+            setGameState(prev => ({ ...prev, gameBlocked: true }));
             break;
 
           case "bingo_announced":
@@ -296,6 +324,10 @@ export function useWebSocket() {
     send({ type: "send_message", message });
   };
 
+  const kickPlayer = (playerId: number) => {
+    send({ type: "kick_player", playerId });
+  };
+
   const clearError = () => {
     setError(null);
   };
@@ -323,6 +355,7 @@ export function useWebSocket() {
     dismissBingoNotification,
     dismissBingoAnnouncement,
     sendMessage,
+    kickPlayer,
     clearError,
     clearWinner,
   };
