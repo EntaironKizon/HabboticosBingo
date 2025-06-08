@@ -8,6 +8,22 @@ interface BingoCardProps {
   disabled?: boolean;
 }
 
+// Función para detectar líneas ganadoras
+function getWinningLines(bingoCard: (number | string)[], markedNumbers: number[]): number[][] {
+  const winPatterns = [
+    [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24], // Horizontales
+    [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24], // Verticales
+    [0,6,12,18,24],[4,8,12,16,20] // Diagonales
+  ];
+
+  return winPatterns.filter((pattern) =>
+    pattern.every((index) => {
+      const number = bingoCard[index];
+      return number === "FREE" || markedNumbers.includes(number as number);
+    })
+  );
+}
+
 export function BingoCard({
   bingoCard,
   markedNumbers,
@@ -55,6 +71,16 @@ export function BingoCard({
     return calledNumbers.includes(number as number);
   };
 
+  // Detectar líneas ganadoras
+  const winningLines = getWinningLines(bingoCard, markedNumbers);
+  const winningCells = new Set(winningLines.flat());
+
+  // Función para obtener la letra BINGO según la columna
+  const getBingoLetter = (index: number): string => {
+    const column = index % 5;
+    return ['B', 'I', 'N', 'G', 'O'][column];
+  };
+
   // 🎵 Función: Tono suave y agradable (volumen reducido a la mitad)
   const playSoftTone = () => {
     const context = new (window.AudioContext || window.webkitAudioContext)();
@@ -94,6 +120,9 @@ export function BingoCard({
       {/* Grid de números */}
       <div className="grid grid-cols-5 gap-2">
         {bingoCard.map((number, index) => {
+          const isWinningCell = winningCells.has(index);
+          const bingoLetter = getBingoLetter(index);
+          
           const displayValue = number === 'FREE' ? (
             <span className="text-2xl font-extrabold text-habbo-purple drop-shadow-md z-10">
               ⭐
@@ -111,24 +140,35 @@ export function BingoCard({
                 !disabled && "hover:bg-gray-100 cursor-pointer",
                 disabled && "cursor-not-allowed",
                 isMarked(number) && "marked",
-                isCalled(number) && "called"
+                isCalled(number) && "called",
+                isWinningCell && "bingo-line-winner"
               )}
               onClick={() => handleCellClick(number)}
             >
               <div className="relative w-full h-full flex items-center justify-center">
-                <span
-                  className={cn(
-                    "text-2xl font-extrabold text-habbo-purple drop-shadow-md z-10",
-                    isMarked(number) && "hidden"
-                  )}
-                >
-                  {displayValue}
-                </span>
-
-                {isMarked(number) && (
-                  <span className="star-icon absolute inset-0 m-auto w-6 h-6 text-yellow-400 animate-pulse">
-                    ⭐
+                {isWinningCell && isMarked(number) ? (
+                  // Solo mostrar la letra BINGO en celdas ganadoras
+                  <span className="text-4xl font-extrabold text-white bingo-letter animate-bounce z-20">
+                    {bingoLetter}
                   </span>
+                ) : (
+                  // Mostrar contenido normal en celdas no ganadoras
+                  <>
+                    <span
+                      className={cn(
+                        "text-2xl font-extrabold text-habbo-purple drop-shadow-md z-10",
+                        isMarked(number) && "hidden"
+                      )}
+                    >
+                      {displayValue}
+                    </span>
+
+                    {isMarked(number) && (
+                      <span className="star-icon absolute inset-0 m-auto w-6 h-6 text-yellow-400 animate-pulse">
+                        ⭐
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
