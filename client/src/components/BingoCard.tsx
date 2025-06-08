@@ -75,15 +75,23 @@ export function BingoCard({
   const winningLines = getWinningLines(bingoCard, markedNumbers);
   const winningCells = new Set(winningLines.flat());
 
-  // Función para obtener la letra BINGO según la columna
+  // Función para obtener la letra BINGO según la posición en la línea ganadora
   const getBingoLetter = (index: number): string => {
+    // Encontrar en qué línea ganadora está esta celda
+    for (const line of winningLines) {
+      const positionInLine = line.indexOf(index);
+      if (positionInLine !== -1) {
+        return ['B', 'I', 'N', 'G', 'O'][positionInLine];
+      }
+    }
+    // Fallback: usar la columna original
     const column = index % 5;
     return ['B', 'I', 'N', 'G', 'O'][column];
   };
 
   // 🎵 Función: Tono suave y agradable (volumen reducido a la mitad)
   const playSoftTone = () => {
-    const context = new (window.AudioContext || window.webkitAudioContext)();
+    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
 
