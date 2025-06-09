@@ -93,7 +93,7 @@ export function BingoCard({
   const playSoftTone = () => {
     try {
       // Import the audio file to ensure it's included in the build
-      const audio = new Audio('/assets/bingo-mark.wav');
+      const audio = new Audio('/bingo-mark.wav');
       audio.volume = 0.3; // Volumen moderado
       audio.play().catch(console.error);
     } catch (error) {
