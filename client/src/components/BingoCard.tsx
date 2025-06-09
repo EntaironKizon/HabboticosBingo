@@ -89,21 +89,15 @@ export function BingoCard({
     return ['B', 'I', 'N', 'G', 'O'][column];
   };
 
-  // 🎵 Función: Tono suave y agradable (volumen reducido a la mitad)
+  // 🎵 Función: Reproducir sonido de marca
   const playSoftTone = () => {
-    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = context.createOscillator();
-    const gainNode = context.createGain();
-
-    oscillator.type = 'triangle'; // Sonido más cálido
-    oscillator.frequency.setValueAtTime(600, context.currentTime); // Frecuencia media-baja
-    gainNode.gain.setValueAtTime(0.15, context.currentTime); // Volumen reducido a la mitad
-    gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.5); // Duración larga y suave
-
-    oscillator.connect(gainNode).connect(context.destination);
-
-    oscillator.start();
-    oscillator.stop(context.currentTime + 0.5); // Totalmente suave y agradable
+    try {
+      const audio = new Audio('/src/assets/bingo-mark.wav');
+      audio.volume = 0.3; // Volumen moderado
+      audio.play().catch(console.error);
+    } catch (error) {
+      console.error('Error playing sound:', error);
+    }
   };
 
   return (
