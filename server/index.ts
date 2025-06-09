@@ -56,7 +56,7 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000  upa 
+  // ALWAYS serve the app on port 5000  epa 
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
