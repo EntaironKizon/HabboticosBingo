@@ -92,7 +92,8 @@ export function BingoCard({
   // 🎵 Función: Reproducir sonido de marca
   const playSoftTone = () => {
     try {
-      const audio = new Audio('/src/assets/bingo-mark.wav');
+      // Import the audio file to ensure it's included in the build
+      const audio = new Audio('/assets/bingo-mark.wav');
       audio.volume = 0.3; // Volumen moderado
       audio.play().catch(console.error);
     } catch (error) {
