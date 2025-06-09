@@ -184,7 +184,7 @@ export function useWebSocket() {
           case "player_won":
             // Reproducir sonido de victoria
             try {
-              const winAudio = new Audio('/src/assets/bingo-win.mp3');
+              const winAudio = new Audio('/assets/bingo-win.mp3');
               winAudio.volume = 0.5;
               winAudio.play().catch(console.error);
             } catch (error) {
