@@ -182,6 +182,15 @@ export function useWebSocket() {
             break;
 
           case "player_won":
+            // Reproducir sonido de victoria
+            try {
+              const winAudio = new Audio('/src/assets/bingo-win.mp3');
+              winAudio.volume = 0.5;
+              winAudio.play().catch(console.error);
+            } catch (error) {
+              console.error('Error playing win sound:', error);
+            }
+            
             setWinner(message.winner);
             setBingoAnnouncement(null); // Limpiar la pantalla de espera
             setBingoNotification(null); // Limpiar notificación del host
