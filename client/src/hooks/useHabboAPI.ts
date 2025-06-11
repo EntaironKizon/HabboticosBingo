@@ -49,7 +49,7 @@ export function useHabboAPI() {
       return userData;
     } catch (err) {
       console.error('Error fetching Habbo user:', err);
-      const serverName = server === 'origins' ? 'Habbo Origins' : 'Habbo España';
+      const serverName = server === 'origins' ? 'Habbo Origins' : 'Habbo (ES)';
       
       return null;
     } finally {
@@ -61,15 +61,15 @@ export function useHabboAPI() {
     const sizeParam = size === 'large' ? 'b' : 's';
     
     if (server === 'origins' && figureString) {
-      return `https://www.habbo.com/habbo-imaging/avatarimage?figure=${encodeURIComponent(figureString)}&direction=4&head_direction=4&size=${sizeParam}`;
+      return `https://www.habbo.com/habbo-imaging/avatarimage?figure=${encodeURIComponent(figureString)}&direction=4&head_direction=4&size=s`;
     }
     
     if (server === 'es') {
-      return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=std&direction=2&head_direction=3&gesture=std&size=${sizeParam}`;
+      return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=std&direction=4&head_direction=4&gesture=std&size=m`;
     }
     
     // Para Origins sin figureString
-    return `https://origins.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=std&direction=2&head_direction=3&gesture=std&size=${sizeParam}`;
+    return `https://origins.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=std&direction=4&head_direction=4&gesture=std&size=s`;
   }, []);
 
   const getFullAvatarUrl = useCallback((username: string, server: HabboServer = 'origins', figureString?: string) => {
@@ -78,11 +78,11 @@ export function useHabboAPI() {
     }
     
     if (server === 'es') {
-      return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=2&head_direction=2&gesture=std&size=m`;
+      return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=4&head_direction=4&gesture=std&size=m`;
     }
     
     // Para Origins sin figureString
-    return `https://origins.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=2&head_direction=2&gesture=std&size=m`;
+    return `https://origins.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=4&head_direction=4&gesture=std&size=s`;
   }, []);
 
   const getHeadOnlyAvatarUrl = useCallback((username: string, server: HabboServer = 'origins', figureString?: string) => {
