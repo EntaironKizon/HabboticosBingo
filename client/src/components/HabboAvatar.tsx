@@ -90,37 +90,37 @@ export function HabboAvatar({
   return (
     <div className={`space-y-3 ${className}`}>
       {showServerSelector && (
-        <div className="flex space-x-2">
-          <ButtonAdd commentMore actions
-            size="sm"
-            variant={selectedServer === 'origins' ? 'default' : 'outline'}
-            onClick={() => {
-              setSelectedServer('origins');
-              onServerChange?.('origins');
-            }}
-            className={selectedServer === 'origins' 
-              ? 'bg-habbo-purple text-white' 
-              : 'bg-white/20 text-white hover:bg-white/30'
-            }
-          >
-            Origins
-          </Button>
-          <Button
-            size="sm"
-            variant={selectedServer === 'es' ? 'default' : 'outline'}
-            onClick={() => {
-              setSelectedServer('es');
-              onServerChange?.('es');
-            }}
-            className={selectedServer === 'es' 
-              ? 'bg-habbo-green text-white' 
-              : 'bg-white/20 text-white hover:bg-white/30'
-            }
-          >
-            España
-          </Button>
-        </div>
-      )}
+  <div className="flex space-x-2">
+    <Button
+      size="sm"
+      variant={selectedServer === 'origins' ? 'default' : 'outline'}
+      onClick={() => {
+        setSelectedServer('origins');
+        onServerChange?.('origins');
+      }}
+      className={selectedServer === 'origins' 
+        ? 'bg-habbo-purple text-white' 
+        : 'bg-white/20 text-white hover:bg-white/30'
+      }
+    >
+      Origins
+    </Button>
+    <Button
+      size="sm"
+      variant={selectedServer === 'es' ? 'default' : 'outline'}
+      onClick={() => {
+        setSelectedServer('es');
+        onServerChange?.('es');
+      }}
+      className={selectedServer === 'es' 
+        ? 'bg-habbo-green text-white' 
+        : 'bg-white/20 text-white hover:bg-white/30'
+      }
+    >
+      España
+    </Button>
+  </div>
+)}
       <div className="flex items-center space-x-3">
         <div className={`${avatarSize} flex items-center justify-center overflow-hidden ${size === 'small' ? 'rounded' : 'rounded-lg'}`}>
           <img 
