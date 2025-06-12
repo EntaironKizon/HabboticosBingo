@@ -165,13 +165,20 @@ export default function Game() {
               {username.trim() && (
                 <div className="flex justify-center">
                   <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-habbo-purple/50">
-                    <HabboAvatar
-                      username={username.trim()}
-                      fullAvatar={true}
-                      showInfo={true}
-                      showServerSelector={true}
-                      onServerChange={(server) => setSelectedServer(server)}
-                    />
+                    {selectedServer === null ? (
+                      <div className="text-white text-sm">
+                        Selecciona un servidor para continuar
+                      </div>
+                    ) : (
+                      <HabboAvatar
+                        username={username.trim()}
+                        fullAvatar={true}
+                        showInfo={true}
+                        showServerSelector={true}
+                        onServerChange={(server) => setSelectedServer(server)}
+                        server={selectedServer} {/* 👈 Esta línea es importante */}
+                      />
+                    )}
                   </div>
                 </div>
               )}
