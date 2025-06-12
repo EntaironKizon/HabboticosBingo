@@ -293,7 +293,7 @@
 
 ::placeholder {
   color: white !important;
-  opacity: 1 !important;
+  opacity: 2 !important;
 }
 
 .input-placeholder-gray::placeholder {
