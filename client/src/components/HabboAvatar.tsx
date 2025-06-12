@@ -99,7 +99,7 @@ export function HabboAvatar({
       onServerChange?.('es');
     }}
     className={selectedServer === 'es' 
-      ? 'bg-habbo-green text-white' 
+      ? 'bg-habbo-purple text-white' 
       : 'bg-white/20 text-white hover:bg-white/30'
     }
   >
