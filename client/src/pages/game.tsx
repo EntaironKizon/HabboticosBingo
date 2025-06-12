@@ -159,7 +159,7 @@ export default function Game() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 maxLength={20}
-                className="w-full px-4 py-3 bg-white/20 border-2 border-habbo-purple text-white placeholder-white/50 focus:border-habbo-pink"
+                className="w-full px-4 py-3 bg-white/20 border-2 border-habbo-purple text-white placeholder-gray-300 focus:border-habbo-pink"
                 onKeyPress={(e) => e.key === "Enter" && handleEnterGame()}
               />
               {username.trim() && (
