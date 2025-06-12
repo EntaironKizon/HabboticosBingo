@@ -292,12 +292,11 @@
 
 
 ::placeholder {
-  color: white !important;
+  color: gray !important;
   opacity: 1 !important;
 }
 
-.input-white-placeholder::placeholder {
-  color: white !important;
-  opacity: 1 !important;
+.input-placeholder-gray::placeholder {
+  color: #aaa;
+  opacity: 1;
 }
-
