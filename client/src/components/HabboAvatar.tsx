@@ -31,11 +31,30 @@ export function HabboAvatar({
   const { getHabboUser, getAvatarUrl, getFullAvatarUrl, getHeadOnlyAvatarUrl, loading, error } = useHabboAPI();
   const [habboUser, setHabboUser] = useState<any>(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
-  const [selectedServer, setSelectedServer] = useState<HabboServer>(() => {
-  const [selectedServer, setSelectedServer] = useState<HabboServer>(propServer || null );
+  
+  // Cargar servidor desde localStorage o usar null para forzar selección manual
+  const [selectedServer, setSelectedServer] = useState<HabboServer | null>(() => {
+    const savedServer = localStorage.getItem('habboServer') as HabboServer | null;
+    return propServer || savedServer || null;
+  });
 
+  // Guardar servidor seleccionado en localStorage
   useEffect(() => {
-    if (username && (showInfo || headOnly)) {
+    if (selectedServer) {
+      localStorage.setItem('habboServer', selectedServer);
+    }
+  }, [selectedServer]);
+
+  // Actualizar servidor si viene como prop
+  useEffect(() => {
+    if (propServer) {
+      setSelectedServer(propServer);
+    }
+  }, [propServer]);
+
+  // Cargar datos solo si hay servidor seleccionado
+  useEffect(() => {
+    if (username && (showInfo || headOnly) && selectedServer) {
       setHabboUser(null);
       getHabboUser(username, selectedServer).then(user => {
         if (user) {
@@ -61,6 +80,16 @@ export function HabboAvatar({
     avatarSize = size === 'large' ? 'h-16 w-16 md:h-18 md:w-18' : 'h-12 w-10 md:h-14 md:w-12';
   }
 
+  // Mostrar mensaje si no hay servidor seleccionado
+  if (!selectedServer) {
+    return (
+      <div className="text-white text-sm flex items-center justify-center h-20">
+        Por favor, selecciona un servidor para continuar.
+      </div>
+    );
+  }
+
+  // Mostrar skeleton mientras carga
   if (loading && showInfo) {
     return (
       <div className={`space-y-3 ${className}`}>
@@ -84,37 +113,38 @@ export function HabboAvatar({
   return (
     <div className={`space-y-3 ${className}`}>
       {showServerSelector && (
-  <div className="flex space-x-2">
-  <Button
-    size="sm"
-    variant={selectedServer === 'es' ? 'default' : 'outline'}
-    onClick={() => {
-      setSelectedServer('es');
-      onServerChange?.('es');
-    }}
-    className={selectedServer === 'es' 
-      ? 'bg-habbo-purple text-white' 
-      : 'bg-white/20 text-white hover:bg-white/30'
-    }
-  >
-    Habbo ES
-  </Button>
-  <Button
-    size="sm"
-    variant={selectedServer === 'origins' ? 'default' : 'outline'}
-    onClick={() => {
-      setSelectedServer('origins');
-      onServerChange?.('origins');
-    }}
-    className={selectedServer === 'origins' 
-      ? 'bg-habbo-purple text-white' 
-      : 'bg-white/20 text-white hover:bg-white/30'
-    }
-  >
-    Habbo Origins
-  </Button>
-</div>
-)}
+        <div className="flex space-x-2">
+          <Button
+            size="sm"
+            variant={selectedServer === 'es' ? 'default' : 'outline'}
+            onClick={() => {
+              setSelectedServer('es');
+              onServerChange?.('es');
+            }}
+            className={selectedServer === 'es' 
+              ? 'bg-habbo-purple text-white' 
+              : 'bg-white/20 text-white hover:bg-white/30'
+            }
+          >
+            Habbo ES
+          </Button>
+          <Button
+            size="sm"
+            variant={selectedServer === 'origins' ? 'default' : 'outline'}
+            onClick={() => {
+              setSelectedServer('origins');
+              onServerChange?.('origins');
+            }}
+            className={selectedServer === 'origins' 
+              ? 'bg-habbo-purple text-white' 
+              : 'bg-white/20 text-white hover:bg-white/30'
+            }
+          >
+            Habbo Origins
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center space-x-3">
         <div className={`${avatarSize} flex items-center justify-center overflow-hidden ${size === 'small' ? 'rounded' : 'rounded-lg'}`}>
           <img 
