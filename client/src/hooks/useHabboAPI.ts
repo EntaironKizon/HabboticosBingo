@@ -65,11 +65,11 @@ export function useHabboAPI() {
     }
     
     if (server === 'es') {
-      return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=std&direction=4&head_direction=4&gesture=std&size=m`;
+      return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=std&direction=4&head_direction=4&gesture=sml&size=m`;
     }
     
     // Para Origins sin figureString
-    return `https://origins.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=std&direction=4&head_direction=4&gesture=std&size=s`;
+    return `https://origins.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=std&direction=4&head_direction=4&gesture=sml&size=s`;
   }, []);
 
   const getFullAvatarUrl = useCallback((username: string, server: HabboServer = 'origins', figureString?: string) => {
@@ -78,11 +78,11 @@ export function useHabboAPI() {
     }
     
     if (server === 'es') {
-      return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=4&head_direction=4&gesture=std&size=m`;
+      return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=4&head_direction=4&gesture=sml&size=m`;
     }
     
     // Para Origins sin figureString
-    return `https://origins.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=4&head_direction=4&gesture=std&size=s`;
+    return `https://origins.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=4&head_direction=4&gesture=sml&size=s`;
   }, []);
 
   const getHeadOnlyAvatarUrl = useCallback((username: string, server: HabboServer = 'origins', figureString?: string) => {
@@ -96,7 +96,7 @@ export function useHabboAPI() {
     }
     
     // Para Habbo España
-    return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=2&head_direction=2&gesture=std&size=m&headonly=1`;
+    return `https://www.habbo.es/habbo-imaging/avatarimage?user=${encodeURIComponent(username)}&action=none,crr=5&direction=2&head_direction=2&gesture=sml&size=m&headonly=1`;
   }, []);
 
   return {
