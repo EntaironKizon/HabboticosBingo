@@ -170,17 +170,17 @@ export default function Game() {
                         Selecciona un servidor para continuar
                       </div>
                     ) : (
-                      <HabboAvatar
-                        username={username.trim()}
-                        fullAvatar={true}
-                        showInfo={true}
-                        showServerSelector={true}
-                        onServerChange={(server) => setSelectedServer(server)}
-                        server={selectedServer} {/* 👈 Esta línea es importante */}
-                      />
-                    )}
-                  </div>
+                    <HabboAvatar
+                      username={username.trim()}
+                      fullAvatar={true}
+                      showInfo={true}
+                      showServerSelector={true}
+                      onServerChange={(server) => setSelectedServer(server)}
+                      server={selectedServer} {/* 👈 Esta línea es importante */}
+                    />
+                  )}
                 </div>
+              </div>
               )}
             </div>
             <Button
