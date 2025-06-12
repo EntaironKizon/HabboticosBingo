@@ -129,7 +129,6 @@ export function HabboAvatar({
             alt={`Avatar de ${username}`}
             onLoad={() => setAvatarLoaded(true)}
             className="w-full h-full object-contain"
-            style={{ imageRendering: 'pixelated' }}
           />
         </div>
 
