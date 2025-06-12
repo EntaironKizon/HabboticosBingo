@@ -288,3 +288,16 @@
 .shake {
   animation: shake 0.5s ease-in-out;
 }
+
+
+
+::placeholder {
+  color: white !important;
+  opacity: 1 !important;
+}
+
+.input-white-placeholder::placeholder {
+  color: white !important;
+  opacity: 1 !important;
+}
+
