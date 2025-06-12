@@ -171,7 +171,7 @@ export default function Game() {
                       showInfo={true}
                       showServerSelector={true}
                       onServerChange={(server) => setSelectedServer(server)}
-                      server={selectedServer} //Esta línea es importante 
+                      
                     />
                   )}
                 </div>
