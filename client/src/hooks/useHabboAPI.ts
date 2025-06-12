@@ -25,7 +25,7 @@ export function useHabboAPI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getHabboUser = useCallback(async (username: string, server: HabboServer = 'origins'): Promise<HabboUser | null> => {
+  const getHabboUser = useCallback(async (username: string, server: HabboServer = 'es'): Promise<HabboUser | null> => {
     if (!username.trim()) return null;
     
     setLoading(true);
