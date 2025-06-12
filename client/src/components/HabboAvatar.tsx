@@ -151,7 +151,7 @@ export function HabboAvatar({
             )}
             {habboUser && (
               <p className="text-xs text-white/50">
-                {selectedServer === 'origins' ? 'Habbo Origins' : 'Habbo ES'}
+                {selectedServer === 'origins' ? 'Origins' : 'Habbo España'}
               </p>
             )}
           </div>
