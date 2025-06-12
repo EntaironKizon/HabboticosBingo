@@ -103,7 +103,7 @@ export function HabboAvatar({
         : 'bg-white/20 text-white hover:bg-white/30'
       }
     >
-      España
+      Habbo ES
     </Button>
     <Button
       size="sm"
@@ -117,7 +117,7 @@ export function HabboAvatar({
         : 'bg-white/20 text-white hover:bg-white/30'
       }
     >
-      Origins
+      Habbo Origins
     </Button>
   </div>
 )}
