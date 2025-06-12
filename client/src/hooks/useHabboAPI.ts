@@ -25,14 +25,14 @@ export function useHabboAPI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getHabboUser = useCallback(async (username: string, server: HabboServer = 'es'): Promise<HabboUser | null> => {
+  const getHabboUser = useCallback(async (username: string, server: HabboServer = 'origins'): Promise<HabboUser | null> => {
     if (!username.trim()) return null;
     
     setLoading(true);
     setError(null);
     
     try {
-      const baseUrl = server === 'origins' 
+      const baseUrl = server === 'es' 
         ? 'https://origins.habbo.es/api/public/users'
         : 'https://www.habbo.es/api/public/users';
       
