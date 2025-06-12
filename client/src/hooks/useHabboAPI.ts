@@ -92,7 +92,7 @@ export function useHabboAPI() {
     
     if (server === 'origins') {
       // Para Origins sin figureString, usar un avatar genérico
-      return `https://www.habbo.com/habbo-imaging/avatarimage?figure=hr-893-61-61.hd-3095-7-61.ch-210-66-.lg-270-82-.sh-290-80-&gender=M&direction=2&head_direction=2&size=s&headonly=1`;
+      return ``;
     }
     
     // Para Habbo España
