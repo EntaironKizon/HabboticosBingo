@@ -87,7 +87,7 @@ export function useHabboAPI() {
 
   const getHeadOnlyAvatarUrl = useCallback((username: string, server: HabboServer = 'origins', figureString?: string) => {
     if (server === 'origins' && figureString) {
-      return `https://www.habbo.com/habbo-imaging/avatarimage?figure=${encodeURIComponent(figureString)}&direction=2&head_direction=4&size=s&headonly=1`;
+      return `https://www.habbo.com/habbo-imaging/avatarimage?figure=${encodeURIComponent(figureString)}&direction=4&head_direction=2&size=s&headonly=1`;
     }
     
     if (server === 'origins') {
