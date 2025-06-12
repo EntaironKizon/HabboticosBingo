@@ -31,7 +31,7 @@ export function HabboAvatar({
   const { getHabboUser, getAvatarUrl, getFullAvatarUrl, getHeadOnlyAvatarUrl, loading, error } = useHabboAPI();
   const [habboUser, setHabboUser] = useState<any>(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
-  const [selectedServer, setSelectedServer] = useState<HabboServer>(propServer || 'es');
+  const [selectedServer, setSelectedServer] = useState<HabboServer>(propServer || 'origins');
 
   // Update selected server when prop changes
   useEffect(() => {
