@@ -32,7 +32,7 @@ export function HabboAvatar({
   const [habboUser, setHabboUser] = useState<any>(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [selectedServer, setSelectedServer] = useState<HabboServer>(() => {
-   const [selectedServer, setSelectedServer] = useState<HabboServer>(propServer || 'es');
+  const [selectedServer, setSelectedServer] = useState<HabboServer>(propServer || null );
 
   useEffect(() => {
     if (username && (showInfo || headOnly)) {
