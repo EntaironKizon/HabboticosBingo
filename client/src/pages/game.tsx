@@ -21,7 +21,7 @@ export default function Game() {
   const [joinCodeInput, setJoinCodeInput] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [selectedServer, setSelectedServer] = useState<"origins" | "es">("origins");
+  const [selectedServer, setSelectedServer] = useState<"origins" | "es" | null>(null);
 
   const {
     gameState,
