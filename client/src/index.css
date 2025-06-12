@@ -310,7 +310,7 @@
 
 .input-placeholder-white-50::placeholder {
   color: white;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .input-placeholder-gray::placeholder {
