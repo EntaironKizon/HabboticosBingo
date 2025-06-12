@@ -291,9 +291,26 @@
 
 
 
+/* Placeholder blanco con transparencia controlada */
+
 ::placeholder {
   color: white !important;
-  opacity: 2 !important;
+  opacity: 0.7 !important;
+}
+
+.input-placeholder-white-90::placeholder {
+  color: white;
+  opacity: 0.9;
+}
+
+.input-placeholder-white-70::placeholder {
+  color: white;
+  opacity: 0.7;
+}
+
+.input-placeholder-white-50::placeholder {
+  color: white;
+  opacity: 0.5;
 }
 
 .input-placeholder-gray::placeholder {
