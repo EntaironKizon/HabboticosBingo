@@ -159,7 +159,7 @@ export default function Game() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 maxLength={20}
-                className="w-full px-4 py-3 bg-white/20 border-2 border-habbo-purple text-white placeholder text:bg-white/70 focus:border-habbo-pink"
+                className="w-full px-4 py-3 bg-white/20 border-2 border-habbo-purple text-white placeholder-white/70 focus:border-habbo-pink"
                 onKeyPress={(e) => e.key === "Enter" && handleEnterGame()}
               />
               {username.trim() && (
@@ -256,7 +256,7 @@ export default function Game() {
                   value={roomCodeInput}
                   onChange={(e) => setRoomCodeInput(e.target.value)}
                   maxLength={10}
-                  className="w-full px-4 py-3 bg-white/20 border-2 border-habbo-green text-white placeholder text:bg-white/70 focus:border-habbo-pink"
+                  className="w-full px-4 py-3 bg-white/20 border-2 border-habbo-green text-white placeholder-white/70 focus:border-habbo-pink"
                 />
                 <div className="flex space-x-2">
                   <Button
@@ -293,7 +293,7 @@ export default function Game() {
                   value={joinCodeInput}
                   onChange={(e) => setJoinCodeInput(e.target.value)}
                   maxLength={10}
-                  className=""w-full px-4 py-3 bg-white/20 border-2 border-habbo-green text-white placeholder text:bg-white/70 focus:border-habbo-pink"
+                  className=""w-full px-4 py-3 bg-white/20 border-2 border-habbo-green text-white placeholder-white/70 focus:border-habbo-pink"
                   onKeyPress={(e) => e.key === "Enter" && handleJoinRoom()}
                 />
                 <div className="flex space-x-2">
