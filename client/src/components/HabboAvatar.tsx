@@ -32,20 +32,7 @@ export function HabboAvatar({
   const [habboUser, setHabboUser] = useState<any>(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [selectedServer, setSelectedServer] = useState<HabboServer>(() => {
-  const savedServer = localStorage.getItem('habboServer') as HabboServer;
-  return propServer || savedServer || 'es';
-});
-
-useEffect(() => {
-  localStorage.setItem('habboServer', selectedServer);
-}, [selectedServer]);
-
-  // Update selected server when prop changes
-  useEffect(() => {
-    if (propServer) {
-      setSelectedServer(propServer);
-    }
-  }, [propServer]);
+   const [selectedServer, setSelectedServer] = useState<HabboServer>(propServer || 'es');
 
   useEffect(() => {
     if (username && (showInfo || headOnly)) {
