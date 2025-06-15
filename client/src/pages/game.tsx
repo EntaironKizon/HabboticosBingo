@@ -21,7 +21,7 @@ export default function Game() {
   const [joinCodeInput, setJoinCodeInput] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [selectedServer, setSelectedServer] = useState<"origins" | "es" | null>(null);
+  const [selectedServer, setSelectedServer] = useState<"origins" | "es">("origins");
 
   const {
     gameState,
@@ -171,11 +171,10 @@ export default function Game() {
                       showInfo={true}
                       showServerSelector={true}
                       onServerChange={(server) => setSelectedServer(server)}
-                      
+                      server={selectedServer}
                     />
-                  )}
+                  </div>
                 </div>
-              </div>
               )}
             </div>
             <Button
