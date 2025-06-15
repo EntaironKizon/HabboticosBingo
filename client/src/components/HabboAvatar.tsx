@@ -151,7 +151,8 @@ export function HabboAvatar({
             src={avatarUrl} 
             alt={`Avatar de ${username}`}
             onLoad={() => setAvatarLoaded(true)}
-            className="w-full h-full object-contain"
+            className={`w-full h-full object-contain ${headOnly && selectedServer === 'origins' ? 'pixelated' : ''}`}
+            style={headOnly && selectedServer === 'origins' ? { imageRendering: 'pixelated' } : {}}
           />
         </div>
 
